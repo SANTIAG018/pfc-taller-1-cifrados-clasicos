@@ -16,10 +16,8 @@ la nota.
 
 | Nombre completo | Código |
 |---|---|
-| | |
-| | |
-| | |
-| | |
+|KEVIN SANTIAGO PLAOMINO MURCIA | 2477200-3743 |
+|JUAN MANUEL POLANIA NAVARRO | 2477452-3743|
 
 ## Cómo está organizado el proyecto
 
