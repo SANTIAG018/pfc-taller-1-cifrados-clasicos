@@ -24,7 +24,25 @@ class CifradosClasicos {
   // Punto 1 -------------------------------------------------------------------
 
   /** César con recursión lineal: una operación pendiente por letra. */
-  def cesar(m: Mensaje, k: Int): Mensaje = ???
+   def cesar(m: Mensaje, k: Int): Mensaje = {
+    val desplazamiento = ((k % letras) + letras) % letras
+
+    if (m.isEmpty) {
+      ""
+    } else {
+      val letra = m.head
+      val resto = m.tail
+
+      if (esMinuscula(letra)) {
+        val posicion = letra.toInt - primera
+        val nueva = ((posicion + desplazamiento) % letras + primera).toChar
+
+        nueva.toString + cesar(resto, k)
+      } else {
+        letra.toString + cesar(resto, k)
+      }
+    }
+   }
 
   // Punto 2 -------------------------------------------------------------------
 
@@ -33,7 +51,26 @@ class CifradosClasicos {
    * Cuando la función esté escrita, anótela con @tailrec: el compilador
    * comprueba que la llamada recursiva sea lo último que hace.
    */
-  final def cesarCola(m: Mensaje, k: Int, acc: Mensaje = ""): Mensaje = ???
+  @tailrec
+  final def cesarCola(m: Mensaje, k: Int, acc: Mensaje = ""):Mensaje = {
+    val desplazamiento = ((k % letras) + letras) % letras
+
+    if (m.isEmpty) {
+      acc
+    } else {
+      val letra = m.head
+      val resto = m.tail
+
+      if (esMinuscula(letra)) {
+        val posicion = letra.toInt - primera
+        val nueva = ((posicion + desplazamiento) % letras + primera).toChar
+
+        cesarCola(resto, k, acc + nueva)
+      } else {
+        cesarCola(resto, k, acc + letra)
+      }
+    }
+  }
 
   // Punto 3 -------------------------------------------------------------------
 
@@ -41,7 +78,37 @@ class CifradosClasicos {
    * Cuenta las letras minúsculas del mensaje, de mayor a menor frecuencia y,
    * en empate, en orden alfabético. El recorrido es recursivo de cola.
    */
-  def frecuencias(m: Mensaje): Frecuencias = ???
+  def frecuencias(m: Mensaje): Frecuencias = {
+    @tailrec
+    def contar(mensaje: Mensaje, lista: Frecuencias): Frecuencias = {
+      if (mensaje.isEmpty) {
+        lista
+      } else {
+        val letra = mensaje.head
+        val resto = mensaje.tail
+
+        if (esMinuscula(letra)) {
+          val encontrada = lista.find(_._1 == letra)
+
+          encontrada match {
+            case Some((_, cantidad)) =>
+              val nuevaLista = lista.map {
+                case (c, n) if c == letra => (c, n + 1)
+                case par => par
+              }
+              contar(resto, nuevaLista)
+
+            case None =>
+              contar(resto, lista :+ (letra, 1))
+          }
+        } else {
+          contar(resto, lista)
+        }
+      }
+    }
+
+    contar(m, List.empty).sortBy(par => (-par._2, par._1))
+  }
 
   // Punto 4 -------------------------------------------------------------------
 
