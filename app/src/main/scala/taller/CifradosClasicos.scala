@@ -116,9 +116,22 @@ class CifradosClasicos {
    * Supone que la letra más frecuente del mensaje cifrado es la 'e' del
    * original y devuelve la distancia entre las dos. Sin letras, cero.
    */
-  def desplazamientoProbable(m: Mensaje): Int = ???
+  def desplazamientoProbable(m: Mensaje): Int = {
+    val frec = frecuencias(m)
+    if (frec.isEmpty) 0
+    else {
+      // la letra que más se repite es la primera de la lista
+      val masFrecuente = frec.head._1
+      // distancia desde la 'e'; se suma 26 para que no quede negativa
+      ((masFrecuente - 'e') + 26) % 26
+    }
+  }
 
-  def romperCesar(m: Mensaje): Mensaje = ???
+  def romperCesar(m: Mensaje): Mensaje = {
+    val k = desplazamientoProbable(m)
+    cesar(m, -k)
+  }
+
 
   // Punto 5 -------------------------------------------------------------------
 
@@ -126,11 +139,29 @@ class CifradosClasicos {
    * Cuántos mensajes de longitud n se forman con a letras sin dos iguales
    * seguidas.
    */
-  def combinaciones(n: Int, a: Int): BigInt = ???
+  def combinaciones(n: Int, a: Int): BigInt =
+    if (n == 0) BigInt(1)
+    else if (n == 1) BigInt(a)
+    else BigInt(a - 1) * combinaciones(n - 1, a)
 
-  /**
-   * Vigenère: cada letra se corre según la letra de la clave que le toca. Lo
-   * que no es letra minúscula se copia y no consume clave.
-   */
-  def vigenere(m: Mensaje, clave: Clave): Mensaje = ???
+  def vigenere(m: Mensaje, clave: Clave): Mensaje = {
+    // i = cuántas letras llevamos cifradas; con eso sabemos qué letra de la clave toca
+    @tailrec
+    def recorrer(resto: Mensaje, i: Int, acc: Mensaje): Mensaje =
+      if (resto.isEmpty) acc
+      else {
+        val c = resto.head
+        if (c >= 'a' && c <= 'z') {
+          val k = clave(i % clave.length) - 'a'
+          // cifrar una letra con la clave es un César de esa letra
+          recorrer(resto.tail, i + 1, acc + cesar(c.toString, k))
+        } else {
+          // no es letra: se copia y no se gasta letra de la clave
+          recorrer(resto.tail, i, acc + c)
+        }
+      }
+
+    if (clave.isEmpty) m else recorrer(m, 0, "")
+  }
+
 }
