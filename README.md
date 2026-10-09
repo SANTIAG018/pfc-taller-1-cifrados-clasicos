@@ -14,10 +14,10 @@ Llene esta tabla con el nombre completo y el código de cada integrante. Es
 parte de la entrega: si falta alguno, la entrega se sanciona con el 20 % de
 la nota.
 
-| Nombre completo | Código |
-|---|---|
-|KEVIN SANTIAGO PLAOMINO MURCIA | 2477200-3743 |
-|JUAN MANUEL POLANIA NAVARRO | 2477452-3743|
+| Nombre completo                | Código |
+|--------------------------------|---|
+| KEVIN SANTIAGO PALOMINO MURCIA | 2477200-3743 |
+| JUAN MANUEL POLANIA NAVARRO    | 2477452-3743|
 
 ## Cómo está organizado el proyecto
 

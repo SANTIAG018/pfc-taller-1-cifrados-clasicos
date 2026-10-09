@@ -48,8 +48,6 @@ class CifradosClasicos {
 
   /**
    * El mismo César como proceso iterativo: espacio constante.
-   * Cuando la función esté escrita, anótela con @tailrec: el compilador
-   * comprueba que la llamada recursiva sea lo último que hace.
    */
   @tailrec
   final def cesarCola(m: Mensaje, k: Int, acc: Mensaje = ""):Mensaje = {
@@ -91,7 +89,7 @@ class CifradosClasicos {
           val encontrada = lista.find(_._1 == letra)
 
           encontrada match {
-            case Some((_, cantidad)) =>
+            case Some((_)) =>
               val nuevaLista = lista.map {
                 case (c, n) if c == letra => (c, n + 1)
                 case par => par
