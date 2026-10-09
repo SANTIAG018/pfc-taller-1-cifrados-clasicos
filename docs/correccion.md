@@ -1,279 +1,225 @@
-# Ejemplo de informe de corrección
+# Informe de correccion
 
-Fundamentos de Programación Funcional y Concurrente.
-Documento realizado por el docente Juan Francisco Díaz.
+Fundamentos de Programacion Funcional y Concurrente.
 
-## 1. Argumentar la corrección de programas recursivos
+## 1. Funcion cesar
 
-Sea $f : A \to B$ una función, y $A$ un conjunto definido recursivamente
-(recordar la definición de Matemáticas Discretas I), como por ejemplo los
-naturales o las listas.
+La funcion `cesar(m, k)` cifra un mensaje cambiando cada letra minuscula segun el desplazamiento indicado. Los demas caracteres se dejan iguales.
 
-Sea $P_f$ un programa recursivo (lineal o en árbol) desarrollado en Scala (o en
-cualquier lenguaje de programación) hecho para calcular $f$:
+### Caso base
 
-```scala
-def Pf(a: A): B = { // Pf recibe a de tipo A, y devuelve f(a) de tipo B
-  ...
-}
-```
+Cuando el mensaje esta vacio, la funcion devuelve una cadena vacia:
 
-¿Cómo argumentar que $P_f(a)$ siempre devuelve $f(a)$ como respuesta? Es decir,
-¿cómo argumentar que $P_f$ es correcto con respecto a su especificación?
+\[
+C("",k) = ""
+\]
 
-La respuesta es sencilla: demostrando el siguiente teorema.
+Esto es correcto porque no hay caracteres que cifrar.
 
-```math
-\forall a \in A : P_f(a) == f(a)
-```
+### Paso de induccion
 
-Cuando uno tiene que demostrar que algo se cumple para todos los elementos de
-un conjunto definido recursivamente, es natural usar inducción estructural. En
-términos prácticos, esto significa demostrar que:
+Supongamos que la funcion cifra correctamente cualquier mensaje de longitud menor que \(n\). Ahora debemos comprobar que tambien funciona para un mensaje de longitud \(n\).
 
-- Para cada valor básico $a$ de $A$, se tiene que $P_f(a) == f(a)$.
-- Para cada valor $a \in A$ construido recursivamente a partir de otro(s)
-  valor(es) $a' \in A$, se tiene que
-  $P_f(a') == f(a') \rightarrow P_f(a) == f(a)$. (Esta es la hipótesis de
-  inducción).
+Sea el mensaje \(m = c + r\), donde \(c\) es el primer caracter y \(r\) es el resto del mensaje.
 
-### Ejemplo: factorial recursivo
+Si \(c\) es una letra minuscula, se calcula la nueva letra usando el desplazamiento \(k\):
 
-Sea $f : \mathbb{N} \to \mathbb{N}$ la función que calcula el factorial de un
-número natural, es decir, $f(n) = n!$. Y sea $P_f$ el siguiente programa en
-Scala:
+\[
+c' = \text{a} + ((c-\text{a}+k)\bmod 26)
+\]
 
-```scala
-def Pf(n: Int): Int = { // Pf recibe n de tipo Int, y devuelve n! de tipo Int
-  if (n == 0) 1 else n * Pf(n - 1)
-}
-```
+Si el caracter no es una letra minuscula, se conserva sin cambios.
 
-Vamos a demostrar que $\forall n \in \mathbb{N} : P_f(n) == n!$
+La funcion despues llama a `cesar` con el resto \(r\). Por la suposicion de induccion, esa llamada cifra correctamente el resto del mensaje. Al unir el primer caracter cifrado con el resultado del resto, se obtiene el mensaje completo cifrado correctamente.
 
-**Caso base:** $n = 0$
+Por lo tanto, `cesar` funciona correctamente para mensajes de cualquier longitud.
 
-```math
-P_f(0) \rightarrow \text{if } (0 == 0)\ 1 \text{ else } 0 \ast P_f(-1) \rightarrow 1
-```
+## 2. Funcion cesarCola
 
-Por otro lado, $f(0) = 0! = 1$. Entonces $P_f(0) == f(0)$.
+La funcion `cesarCola(m, k, acc)` cifra el mensaje igual que `cesar`, pero guarda los caracteres procesados en el acumulador `acc`.
 
-**Caso de inducción:** $n = k + 1$, $k \geq 0$. Hay que demostrar:
-$P_f(k) == f(k) \rightarrow P_f(k + 1) == f(k + 1)$
+### Caso base
 
-```math
-P_f(k+1) \rightarrow \text{if } (k+1 == 0)\ 1 \text{ else } (k+1) \ast P_f(k) \rightarrow (k+1) \ast P_f(k)
-```
+Cuando el mensaje esta vacio, devuelve el acumulador:
 
-Usando la hipótesis de inducción (HI):
+\[
+CC("",k,acc)=acc
+\]
 
-```math
-\rightarrow (k+1) \ast k! = (k+1)!
-```
+El acumulador contiene el resultado de procesar todos los caracteres anteriores.
 
-Por lo tanto, $P_f(k + 1) == f(k + 1)$.
+### Paso de induccion
 
-Concluimos por inducción que $\forall n \in \mathbb{N} : P_f(n) == n!$
+Supongamos que el acumulador contiene correctamente el cifrado de los caracteres ya procesados.
 
-### Ejemplo: el máximo de una lista
+La funcion toma el primer caracter del mensaje. Si es una letra minuscula, lo cifra; en caso contrario, lo conserva. Luego agrega ese caracter al acumulador y llama a `cesarCola` con el resto del mensaje.
 
-Sea $f : \text{List}[\mathbb{N}] \to \mathbb{N}$ la función que calcula el
-máximo de una lista de enteros positivos, no vacía. Y sea $P_f$ el siguiente
-programa en Scala:
+En cada paso, el acumulador conserva el resultado parcial correcto. Cuando el mensaje queda vacio, devuelve el resultado completo.
 
-```scala
-def maxLin(l: List[Int]): Int = {
-  if (l.tail.isEmpty) l.head
-  else math.max(maxLin(l.tail), l.head)
-}
-```
+Por lo tanto, `cesarCola` produce el mismo resultado que `cesar` cuando se utiliza el mismo mensaje y desplazamiento.
 
-Demostraremos que:
+La diferencia es que `cesarCola` utiliza recursion de cola, porque la llamada recursiva es la ultima operacion. La anotacion `@tailrec` permite comprobar esta condicion en Scala.
 
-```math
-\forall n \in \mathbb{N} \setminus \{0\} : P_f(\text{List}(a_1, a_2, \ldots, a_n)) == f(\text{List}(a_1, a_2, \ldots, a_n))
-```
+## 3. Funcion frecuencias
 
-**Caso base:** $n = 1$
+La funcion `frecuencias(m)` cuenta cuantas veces aparece cada letra minuscula en el mensaje. Al final ordena la lista desde la mayor frecuencia hasta la menor y, si hay un empate, utiliza el orden alfabetico.
 
-```math
-P_f(\text{List}(a_1)) \rightarrow \text{if } \text{List}(a_1).\text{tail.isEmpty then } \text{List}(a_1).\text{head else } \ldots \rightarrow \text{List}(a_1).\text{head} \rightarrow a_1
-```
+### Caso base
 
-Por otro lado, $f(\text{List}(a_1)) = a_1$. Entonces
-$P_f(\text{List}(a_1)) == f(\text{List}(a_1))$.
+Cuando no quedan caracteres por revisar, la funcion interna `contar` devuelve la lista acumulada:
 
-**Caso de inducción:** $n = k + 1$, $k \geq 1$. Se debe demostrar:
+\[
+F("",L)=L
+\]
 
-```math
-P_f(\text{List}(b_1, b_2, \ldots, b_k)) == f(\text{List}(b_1, b_2, \ldots, b_k)) \rightarrow P_f(\text{List}(a_1, a_2, \ldots, a_{k+1})) == f(\text{List}(a_1, a_2, \ldots, a_{k+1}))
-```
+La lista contiene las frecuencias de los caracteres que ya se procesaron.
 
-Empecemos por calcular qué devuelve $P_f$ usando el modelo de sustitución:
+### Paso de induccion
 
-```math
-P_f(L) \rightarrow \text{if } L.\text{tail.isEmpty then } L.\text{head else math.max}(P_f(L.\text{tail}), L.\text{head})
-```
+Supongamos que la lista \(L\) contiene las frecuencias correctas de los caracteres que ya se revisaron.
 
-```math
-\rightarrow \text{math.max}(P_f(\text{List}(a_2, \ldots, a_{k+1})), a_1)
-```
+Al tomar el siguiente caracter, pueden ocurrir tres situaciones:
 
-Sea $b = P_f(\text{List}(a_2, \ldots, a_{k+1}))$; por la hipótesis de
-inducción, $b = f(\text{List}(a_2, \ldots, a_{k+1}))$. Hay dos posibilidades:
+- Si no es una letra minuscula, la lista no cambia.
+- Si es una letra que ya esta en la lista, su frecuencia aumenta en uno.
+- Si es una letra que no esta en la lista, se agrega con frecuencia uno.
 
-- Si $\text{math.max}(b, a_1) = b$, entonces $b \geq a_1$ y
- $b == f(\text{List}(a_1, a_2, \ldots, a_{k+1}))$.
-- Si $\text{math.max}(b, a_1) = a_1$, entonces $a_1 \geq b$ y
- $a_1 == f(\text{List}(a_1, a_2, \ldots, a_{k+1}))$.
+En cada caso, la lista queda con las frecuencias correctas para los caracteres procesados. La funcion continua con el resto del mensaje hasta terminar.
 
-Por lo tanto, $P_f(L) == f(L)$.
+Finalmente, ordena la lista por frecuencia descendente y por caracter ascendente cuando hay empates.
 
-Concluimos por inducción que:
+Por lo tanto, `frecuencias` devuelve las cantidades correctas de las letras minusculas del mensaje, ordenadas segun las condiciones indicadas.
 
-```math
-\forall n \in \mathbb{N} \setminus \{0\} : P_f(\text{List}(a_1, a_2, \ldots, a_n)) == f(\text{List}(a_1, a_2, \ldots, a_n))
-```
+## 4. Funcion desplazamientoProbable
 
-## 2. Argumentar la corrección de programas iterativos
+La funcion `desplazamientoProbable(m)` utiliza la letra mas frecuente del mensaje para calcular un desplazamiento probable, suponiendo que esa letra corresponde a la `e` del mensaje original.
 
-Para argumentar la corrección de programas iterativos, se debe formalizar cómo
-es la iteración. Esto implica definir:
+### Caso base
 
-- Cómo se representa un estado de la iteración, $s$.
-- Cuál es el estado inicial, $s_0$.
-- Cuál es el estado final (o cómo se reconoce que un estado es final): $s_f$.
-- Qué condición (o predicado) cumple todo estado: $\text{Inv}(s)$ (invariante
-  de la iteración).
-- El mecanismo para pasar de un estado al siguiente: $\text{transformar}(s)$.
-  Si $s_i$ es el estado $i$, entonces $\text{transformar}(s_i) = s_{i+1}$.
-
-Un programa iterativo tiene la siguiente forma:
+Si la lista de frecuencias esta vacia, la funcion devuelve cero:
 
-```scala
-def Pf(a: A): B = { // Pf recibe a de tipo A, y devuelve f(a) de tipo B
-  def Pf_iter(s: Estado): B =
-    if (esFinal(s)) respuesta(s) else Pf_iter(transformar(s))
-  Pf_iter(s0)
-}
-```
+\[
+D(m)=0
+\]
 
-Demostración de corrección:
+Esto sucede cuando no hay letras minusculas para analizar.
 
-- $\text{Inv}(s_0)$: el estado inicial cumple la condición invariante.
-- Si $(s_i \neq s_f \land \text{Inv}(s_i)) \rightarrow \text{Inv}(\text{transformar}(s_i))$:
-  el nuevo estado cumple la condición invariante si el estado anterior la
-  cumplía.
-- De lo anterior se concluye $\text{Inv}(s_f)$, es decir, el estado final
-  cumple la condición invariante. Luego,
-  $\text{Inv}(s_f) \rightarrow \text{respuesta}(s_f) == f(a)$.
-- Finalmente, demostrar que siempre se llega al estado final $s_f$. Esto
-  implica que
-  $P_f(a) == \text{iter}(s_0) == \text{respuesta}(s_f) == f(a)$.
+### Caso general
 
-### Ejemplo: factorial iterativo
+Si existe al menos una letra, se toma la primera de la lista ordenada de frecuencias y se calcula:
 
-Considere el siguiente programa iterativo en Scala para calcular la función
-factorial:
+\[
+D(m)=(c-\text{e}+26)\bmod 26
+\]
 
-```scala
-def Pf(n: Int): Int = { // Pf recibe n de tipo Int, y devuelve n! de tipo Int
-  def Pf_iter(i: Int, n: Int, ac: Int): Int =
-    if (i > n) ac else Pf_iter(i + 1, n, i * ac)
-  Pf_iter(1, n, 1)
-}
-```
+donde \(c\) es la letra mas frecuente.
 
-Este programa implementa el siguiente proceso iterativo:
+La funcion realiza correctamente este calculo segun la regla que utiliza. Sin embargo, el desplazamiento obtenido no siempre es el que se uso para cifrar el mensaje, porque la letra mas frecuente no siempre corresponde a la `e` original.
 
-- Un estado $s = (i, n, ac)$.
-- El estado inicial es $s_0 = (1, n, 1)$.
-- $(i, n, ac)$ es final si $i > n$, o lo que es lo mismo, si $i = n + 1$.
-- La invariante de ciclo es
-  $\text{Inv}(i, n, ac) \equiv i \leq n + 1 \land ac = (i-1)!$.
-  La invariante de ciclo es una relación que SIEMPRE se cumple en el ciclo.
-- $\text{transformar}((i, n, ac)) = (i+1, n, i \ast ac)$.
+Por lo tanto, la funcion calcula un desplazamiento probable, pero no garantiza que sea el correcto.
 
-Ahora, demostramos los puntos mencionados:
+## 5. Funcion romperCesar
 
-**1.** $\text{Inv}(s_0)$: el estado inicial cumple la condición invariante.
+La funcion `romperCesar(m)` utiliza el desplazamiento obtenido por `desplazamientoProbable` y lo aplica en sentido contrario con la funcion `cesar`.
 
-```math
-s_0 = (1, n, 1) \implies 1 \leq n + 1 \land 1 = 0!
-```
+Su procedimiento se puede expresar asi:
 
-**2.** La invariante se mantiene con la transformación de estados,
-$(s_i \neq s_f \land \text{Inv}(s_i)) \rightarrow \text{Inv}(\text{transformar}(s_i))$:
+\[
+R(m)=C(m,-D(m))
+\]
 
-1. Primer cambio, $i = i + 1$, lo que implica $ac = ((i+1) - 1)! = i!$.
-2. Segundo cambio, $ac = i \ast ac$, entonces $ac = (i - 1)! \ast i = i!$.
-3. Como se puede ver en ambos cambios indicados en la transformación, la
-   invariante se mantiene.
+Primero calcula el desplazamiento probable. Despues cifra el mensaje con el desplazamiento negativo para intentar recuperar el texto original.
 
-**3.** $\text{Inv}(s_f) \rightarrow \text{respuesta}(s_f) == f(a)$
+Si el desplazamiento calculado es el correcto, la funcion recupera las letras originales. Si el desplazamiento es incorrecto, el resultado tambien puede ser incorrecto.
 
-```math
-(n + 1 \leq n + 1) \land ac = ((n+1)-1)! \rightarrow ac == n!
-```
+Por ejemplo, si el mensaje original es `aaaa` y se cifra con desplazamiento 3, se obtiene `dddd`. La funcion puede suponer que la `d` corresponde a la `e` original y calcular un desplazamiento de 25. Al aplicar el desplazamiento contrario, obtiene `eeee`, no `aaaa`.
 
-**4.** En cada paso, la componente $i$ del estado incrementa, acercándose a $n+1$.
-Después de $n$ iteraciones, se alcanza $n+1$.
+Por lo tanto, `romperCesar` sigue el procedimiento definido en el codigo, pero no garantiza recuperar cualquier mensaje original.
 
-Esto implica que $P_f(n) == \text{iter}(1, n, 1) == n!$
+## 6. Funcion combinaciones
 
-### Ejemplo: el máximo de una lista
+La funcion `combinaciones(n, a)` calcula la cantidad de cadenas de longitud \(n\) que se pueden formar con \(a\) letras sin repetir la misma letra dos veces seguidas.
 
-Se desea calcular el máximo de una lista de enteros positivos, no vacía. Sea
-$f : \text{List}[\mathbb{N}] \to \mathbb{N}$ la función que calcula ese valor.
-Y sea $P_f$ el siguiente programa en Scala:
+### Casos base
 
-```scala
-def maxIt(l: List[Int]): Int = {
-  def maxAux(max: Int, l: List[Int]): Int = {
-    if (l.isEmpty) max
-    else maxAux(math.max(max, l.head), l.tail)
-  }
-  maxAux(l.head, l.tail)
-}
-```
+Para \(n=0\), devuelve uno:
 
-Este programa implementa el siguiente proceso iterativo:
+\[
+C(0,a)=1
+\]
 
-- Un estado $s = (max, l)$ donde $l = \text{List}(a_i, a_{i+1}, \ldots, a_k)$
-  es una cola de $L$.
-- El estado inicial es
-  $s_0 = (L.\text{head}, L.\text{tail}) = (a_1, \text{List}(a_2, \ldots, a_k))$.
-- $s = (max, l)$ es final si $l$ es vacía.
-- $\text{Inv}(max, l) \equiv l = \text{List}(a_i, a_{i+1}, \ldots, a_k) \land max = f(\text{List}(a_1, a_2, \ldots, a_{i-1}))$.
-- $\text{transformar}((max, l)) = (nmax, l.\text{tail})$ donde $nmax = max$ si
-  $max \geq l.\text{head}$, y $nmax = l.\text{head}$ si no.
+Esto representa la cadena vacia.
 
-Demostración de los puntos:
+Para \(n=1\), devuelve \(a\):
 
-**1.** $\text{Inv}(s_0)$: el estado inicial cumple la condición invariante.
+\[
+C(1,a)=a
+\]
 
-```math
-s_0 = (a_1, \text{List}(a_2, \ldots, a_k)) \implies a_1 = f(\text{List}(a_1))
-```
+Esto se debe a que cualquiera de las \(a\) letras puede ocupar la unica posicion.
 
-**2.** $(s_i \neq s_f \land \text{Inv}(s_i)) \rightarrow \text{Inv}(\text{transformar}(s_i))$
+### Paso de induccion
 
-```math
-\neg\, l.\text{isEmpty} \land l = \text{List}(a_i, a_{i+1}, \ldots, a_k) \land max = f(\text{List}(a_1, a_2, \ldots, a_{i-1}))
-```
+Para \(n\geq 2\), la funcion utiliza la formula:
 
-```math
-\rightarrow l.\text{tail} = \text{List}(a_{i+1}, \ldots, a_k) \land nmax = f(\text{List}(a_1, \ldots, a_i))
-```
+\[
+C(n,a)=(a-1)C(n-1,a)
+\]
 
-**3.** $\text{Inv}(s_f) \rightarrow \text{respuesta}(s_f) == f(a)$
+Supongamos que \(C(k,a)\) calcula correctamente la cantidad de cadenas de longitud \(k\), donde \(k\geq 1\).
 
-```math
-\text{Inv}((max, \text{List}())) \rightarrow max = f(\text{List}(a_1, \ldots, a_k))
-```
+Para una cadena de longitud \(k+1\), se puede elegir cualquiera de las \(a\) letras para la primera posicion. Para cada posicion siguiente hay \(a-1\) opciones, porque no se puede repetir la letra anterior.
 
-**4.** En cada paso, la lista $l$ se reduce, acercándose a ser vacía. Después de
-$k$ iteraciones, $l = \text{List}()$.
+Por eso, el numero de cadenas de longitud \(k+1\) es:
 
-Esto implica que $P_f(L) == \text{maxAux}(L.\text{head}, L.\text{tail}) == f(L)$
+\[
+C(k+1,a)=(a-1)C(k,a)
+\]
+
+Como la funcion aplica esta formula y reduce el valor de \(n\) en cada llamada, llega a uno de los casos base y calcula el resultado siguiendo la recurrencia.
+
+Por lo tanto, la funcion calcula correctamente las cantidades para los valores definidos en el codigo, con \(a\geq 1\) y \(n\geq 0\).
+
+Ademas, utiliza `BigInt` para trabajar con resultados enteros grandes.
+
+## 7. Funcion vigenere
+
+La funcion `vigenere(m, clave)` cifra cada letra minuscula utilizando la letra correspondiente de la clave. El acumulador guarda el resultado y el indice indica que posicion de la clave se debe utilizar.
+
+### Caso especial
+
+Si la clave esta vacia, la funcion devuelve el mensaje original sin cambios.
+
+### Caso base
+
+Cuando el resto del mensaje esta vacio, devuelve el acumulador:
+
+\[
+V("",clave,i,acc)=acc
+\]
+
+Esto significa que todos los caracteres ya fueron procesados.
+
+### Paso de induccion
+
+Supongamos que el acumulador contiene correctamente el resultado de los caracteres procesados y que el resto del mensaje se puede cifrar correctamente.
+
+Si el primer caracter es una letra minuscula, la funcion obtiene el desplazamiento a partir de la letra correspondiente de la clave y lo cifra. Luego agrega el resultado al acumulador y aumenta el indice de la clave.
+
+Si el caracter no es una letra minuscula, lo agrega sin cambios y mantiene el mismo indice. De esta forma, los espacios y otros caracteres no consumen letras de la clave.
+
+Cuando el indice llega al final de la clave, se utiliza el modulo para volver a su primera posicion.
+
+Por la suposicion de induccion, el resto del mensaje se procesa correctamente. Al agregar el caracter actual al acumulador, se mantiene correcto el resultado parcial.
+
+Por lo tanto, `vigenere` cifra las letras minusculas segun la clave y conserva los demas caracteres, como indica el codigo.
+
+## 8. Conclusion
+
+Las funciones del taller utilizan recursion para cifrar mensajes, contar frecuencias y calcular cantidades.
+
+La correccion de `cesar` se justifica porque cifra el primer caracter y luego cifra correctamente el resto del mensaje. `cesarCola` obtiene el mismo resultado utilizando un acumulador. `frecuencias` mantiene las cantidades correctas durante el recorrido, mientras que `vigenere` conserva el resultado parcial y utiliza la clave en el orden correspondiente.
+
+La funcion `combinaciones` sigue una formula recursiva con casos base definidos. Por otro lado, `desplazamientoProbable` y `romperCesar` realizan el procedimiento programado, pero su resultado depende de una suposicion sobre la letra mas frecuente.
+
+Estas explicaciones permiten justificar como trabajan las funciones y cuales son sus limitaciones.
